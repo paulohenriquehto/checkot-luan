@@ -1,0 +1,19 @@
+{
+  "name": "manual-do-milhao",
+  "version": "1.0.0",
+  "description": "Checkout do Manual Do Milhão com integração PIX via Vizzion Pay",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": ["checkout", "pix", "vizzion-pay"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1"
+  }
+}
