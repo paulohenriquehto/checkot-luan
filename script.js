@@ -689,7 +689,7 @@ function initializeFormMonitoring() {
 
             const amount = window.currentProductPrice || 19.90;
 
-            const response = await fetch('/generate-pix', {
+            const response = await fetch('/api/create-pix', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -704,11 +704,33 @@ function initializeFormMonitoring() {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Erro ao gerar PIX');
+                let errorMessage = '';
+                try {
+                    const ct = response.headers.get('content-type') || '';
+                    if (ct.includes('application/json')) {
+                        const errorJson = await response.json();
+                        errorMessage = errorJson.message || JSON.stringify(errorJson);
+                    } else {
+                        errorMessage = await response.text();
+                    }
+                } catch {
+                    errorMessage = `HTTP ${response.status} ${response.statusText}`;
+                }
+                throw new Error(errorMessage || 'Erro ao gerar PIX');
             }
 
-            const result = await response.json();
+            let result;
+            try {
+                const ct = response.headers.get('content-type') || '';
+                if (ct.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    const raw = await response.text();
+                    result = { data: null, raw };
+                }
+            } catch {
+                result = { data: null };
+            }
             pixPaymentData = result.data;
 
             console.log('📦 Resposta completa do servidor:', result);
@@ -723,12 +745,12 @@ function initializeFormMonitoring() {
             console.log('💾 Transaction ID salvo:', window.currentPayment.transactionId);
 
             // Atualiza QR Code se a API retornar
-            if (pixPaymentData.qrCodeBase64 || pixPaymentData.qrCode || pixPaymentData.qrCodeImage) {
+            if (pixPaymentData && (pixPaymentData.qrCodeBase64 || pixPaymentData.qrCode || pixPaymentData.qrCodeImage)) {
                 updateQRCode(pixPaymentData);
             }
 
             // Atualiza código PIX para copiar
-            if (pixPaymentData.pixCode || pixPaymentData.qrCodeText) {
+            if (pixPaymentData && (pixPaymentData.pixCode || pixPaymentData.qrCodeText)) {
                 updatePixCode(pixPaymentData.pixCode || pixPaymentData.qrCodeText);
             }
 
